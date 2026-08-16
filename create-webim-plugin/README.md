@@ -12,4 +12,4 @@ plugin project (`webim-plugin.json`, `src/`, README). Everything else
 
 ## License
 
-[MIT](https://github.com/morsaken/webim-v15-plugin-cli/blob/master/LICENSE)
+[MIT](https://github.com/morsaken/webim-plugin/blob/master/LICENSE)

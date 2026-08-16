@@ -16,12 +16,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/morsaken/webim-v15-plugin-cli.git",
+    "url": "git+https://github.com/morsaken/webim-plugin.git",
     "directory": "create-webim-plugin"
   },
-  "homepage": "https://github.com/morsaken/webim-v15-plugin-cli#readme",
+  "homepage": "https://github.com/morsaken/webim-plugin#readme",
   "bugs": {
-    "url": "https://github.com/morsaken/webim-v15-plugin-cli/issues"
+    "url": "https://github.com/morsaken/webim-plugin/issues"
   },
   "keywords": [
     "webim",

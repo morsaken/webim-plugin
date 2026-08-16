@@ -1,6 +1,6 @@
 {
   "name": "create-webim-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "npm create webim-plugin — scaffold a Web-IM builder plugin project (alias for webim-plugin init)",
   "license": "MIT",
   "author": "Orhan POLAT",

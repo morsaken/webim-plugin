@@ -1,0 +1,36 @@
+{
+  "name": "webim-plugin",
+  "version": "1.0.0",
+  "description": "CLI for Web-IM builder plugins — scaffold, bundle TS/JSX into the single-module standard, validate, and push to a tenant",
+  "license": "MIT",
+  "author": "Orhan POLAT",
+  "type": "module",
+  "bin": {
+    "webim-plugin": "./bin/webim-plugin.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morsaken/webim-plugin.git"
+  },
+  "homepage": "https://github.com/morsaken/webim-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/morsaken/webim-plugin/issues"
+  },
+  "keywords": [
+    "webim",
+    "plugin",
+    "cli",
+    "builder",
+    "cms",
+    "esbuild"
+  ],
+  "dependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

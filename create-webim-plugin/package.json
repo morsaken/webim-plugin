@@ -1,0 +1,35 @@
+{
+  "name": "create-webim-plugin",
+  "version": "1.0.0",
+  "description": "npm create webim-plugin — scaffold a Web-IM builder plugin project (alias for webim-plugin init)",
+  "license": "MIT",
+  "author": "Orhan POLAT",
+  "type": "module",
+  "bin": {
+    "create-webim-plugin": "./bin/create-webim-plugin.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morsaken/webim-v15-plugin-cli.git",
+    "directory": "create-webim-plugin"
+  },
+  "homepage": "https://github.com/morsaken/webim-v15-plugin-cli#readme",
+  "bugs": {
+    "url": "https://github.com/morsaken/webim-v15-plugin-cli/issues"
+  },
+  "keywords": [
+    "webim",
+    "plugin",
+    "create",
+    "scaffold"
+  ],
+  "dependencies": {
+    "webim-plugin": "^1.0.0"
+  }
+}

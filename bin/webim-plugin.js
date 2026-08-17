@@ -37,7 +37,7 @@ Commands:
 
 Config (webim-plugin.json):
   { "entry": "src/index.js", "out": "dist/plugin.js",
-    "api": "http://localhost:4100/api", "tenant": "root" }
+    "api": "https://webim.app/api", "tenant": "root" }
 
 Auth (push/dev): WEBIM_TOKEN, or WEBIM_EMAIL + WEBIM_PASSWORD.`;
 
@@ -45,7 +45,7 @@ Auth (push/dev): WEBIM_TOKEN, or WEBIM_EMAIL + WEBIM_PASSWORD.`;
 // scaffolding
 
 const TEMPLATE_CONFIG = (name) => `${JSON.stringify(
-  { entry: 'src/index.js', out: 'dist/plugin.js', api: 'http://localhost:4100/api', tenant: 'root' },
+  { entry: 'src/index.js', out: 'dist/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
   null,
   2
 )}\n`;
@@ -206,7 +206,9 @@ must have a default in \`props\`.
 
 - Everything must land in ONE ES module — \`push\` uploads only the built JS.
 - \`import\` of \`.css\`/\`.html\` files yields the file content as a STRING
-  (inject a \`<style>\` tag / parse markup yourself at mount time).
+  (inject a \`<style>\` tag / parse markup yourself at mount time). In \`.css\`
+  imports the CLI rewrites \`:root\` to \`:host\` — inside a shadow root
+  \`:root\` matches nothing, \`:host\` is its exact analogue.
 - Images and fonts (\`.svg .png .jpg .jpeg .gif .webp .woff .woff2\`) import
   as \`data:\` URLs.
 - After bundling, the CLI IMPORTS the bundle in Node.js to validate it.
@@ -226,7 +228,8 @@ must have a default in \`props\`.
    \`document.head\` (deduplicate first) — \`@font-face\` is inert inside a
    shadow root.
 3. If reusing an app's page-level stylesheet, rescope it to a wrapper div
-   inside the shadow: \`body\`/\`html\`/\`:root\` selectors → the wrapper class,
+   inside the shadow: \`body\`/\`html\` selectors → the wrapper class
+   (\`:root\` is rewritten to \`:host\` by the build automatically),
    \`position: fixed\` → \`absolute\`, \`100vw/100vh\` → \`100%\`. Give the
    wrapper \`position: relative; overflow: hidden\`.
 4. The same block can be mounted MULTIPLE times on one page: no module-level
@@ -445,7 +448,7 @@ async function wrap(dirArg) {
 
   await mkdir(path.dirname(entryFile), { recursive: true });
   await writeFile(path.join(dir, CONFIG_FILE), `${JSON.stringify(
-    { entry, out: 'dist/plugin.js', api: 'http://localhost:4100/api', tenant: 'root' },
+    { entry, out: 'dist/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
     null,
     2
   )}\n`);
@@ -488,7 +491,7 @@ async function loadConfig() {
   return {
     entry: config.entry ?? 'src/index.js',
     out: config.out ?? 'dist/plugin.js',
-    api: config.api ?? 'http://localhost:4100/api',
+    api: config.api ?? 'https://webim.app/api',
     tenant: config.tenant ?? ''
   };
 }
@@ -497,7 +500,6 @@ async function loadConfig() {
 // and HTML come in as strings (inject a <style> / parse markup at mount),
 // images and fonts as data: URLs.
 const LOADERS = {
-  '.css': 'text',
   '.html': 'text',
   '.svg': 'dataurl',
   '.png': 'dataurl',
@@ -507,6 +509,31 @@ const LOADERS = {
   '.webp': 'dataurl',
   '.woff': 'dataurl',
   '.woff2': 'dataurl'
+};
+
+// .css imports are strings too, but rescoped first: plugins render inside a
+// Shadow DOM, where `:root` matches nothing — its analogue is `:host`, so the
+// rewrite is always safe (same specificity, same "tree root" meaning).
+// `html`/`body` selectors CAN'T be rewritten automatically — the wrapper
+// class they should target is the plugin's own choice — so they only warn.
+const warnedCssFiles = new Set();
+const cssRescopePlugin = {
+  name: 'css-rescope',
+  setup(build) {
+    build.onLoad({ filter: /\.css$/ }, async (args) => {
+      const css = await readFile(args.path, 'utf8');
+
+      if (!warnedCssFiles.has(args.path) && /(^|[\s,}])(html|body)\s*[,{[.:>#]/m.test(css)) {
+        warnedCssFiles.add(args.path);
+        console.warn(
+          `Warning: ${path.relative(process.cwd(), args.path)} styles html/body — those selectors match nothing ` +
+            'inside the shadow root; rescope them to a wrapper class (see WEBIM_PLUGIN.md, Rendering rules).'
+        );
+      }
+
+      return { contents: css.replace(/:root\b/g, ':host'), loader: 'text' };
+    });
+  }
 };
 
 async function bundle(config) {
@@ -523,7 +550,8 @@ async function bundle(config) {
     // Modern JSX runtime (React 17+/Vite default): .jsx/.tsx files work
     // without a manual `import React` in every file.
     jsx: 'automatic',
-    loader: LOADERS
+    loader: LOADERS,
+    plugins: [cssRescopePlugin]
   });
 
   if (result.errors.length) throw new Error(result.errors.map((e) => e.text).join('\n'));
@@ -684,6 +712,7 @@ async function dev() {
     jsx: 'automatic',
     loader: LOADERS,
     plugins: [
+      cssRescopePlugin,
       {
         name: 'webim-push',
         setup(buildHook) {

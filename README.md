@@ -32,7 +32,7 @@ Requires Node 18+.
 ```bash
 webim-plugin init my-widget   # scaffold: webim-plugin.json, src/, README
 cd my-widget
-webim-plugin build            # esbuild -> dist/plugin.js + validation
+webim-plugin build            # esbuild -> build/plugin.js + validation
 webim-plugin push             # build, sign in, merge into builder_plugins
 webim-plugin dev              # watch src/, rebuild + push on every change
 ```
@@ -67,7 +67,7 @@ needed).
 ```json
 {
   "entry": "src/index.js",
-  "out": "dist/plugin.js",
+  "out": "build/plugin.js",
   "api": "https://your-webim/api",
   "tenant": "your-tenant-slug"
 }

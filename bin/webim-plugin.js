@@ -3,7 +3,7 @@
 // webim-plugin — the Web-IM builder plugin CLI.
 //
 //   webim-plugin init [dir]     scaffold a plugin project
-//   webim-plugin build          bundle src/ into dist/plugin.js and validate it
+//   webim-plugin build          bundle src/ into build/plugin.js and validate it
 //   webim-plugin push           build + upload to the tenant's builder_plugins
 //   webim-plugin dev            watch src/, rebuild and push on every change
 //
@@ -31,12 +31,12 @@ Commands:
   wrap [dir]   convert an EXISTING project: add config, an adapter entry
                (Shadow-DOM boilerplate, React-aware) and WEBIM_PLUGIN.md —
                the plugin contract written as rules for AI assistants
-  build        bundle the entry into dist/plugin.js and validate it
+  build        bundle the entry into build/plugin.js and validate it
   push         build, then upload to the tenant's builder_plugins setting
   dev          watch the source; rebuild and push on every change
 
 Config (webim-plugin.json):
-  { "entry": "src/index.js", "out": "dist/plugin.js",
+  { "entry": "src/index.js", "out": "build/plugin.js",
     "api": "https://webim.app/api", "tenant": "root" }
 
 Auth (push/dev): WEBIM_TOKEN, or WEBIM_EMAIL + WEBIM_PASSWORD.`;
@@ -45,7 +45,7 @@ Auth (push/dev): WEBIM_TOKEN, or WEBIM_EMAIL + WEBIM_PASSWORD.`;
 // scaffolding
 
 const TEMPLATE_CONFIG = (name) => `${JSON.stringify(
-  { entry: 'src/index.js', out: 'dist/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
+  { entry: 'src/index.js', out: 'build/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
   null,
   2
 )}\n`;
@@ -106,7 +106,7 @@ A Web-IM builder plugin. Develop:
 
 \`\`\`bash
 npm install
-npx webim-plugin build   # bundle + validate -> dist/plugin.js
+npx webim-plugin build   # bundle + validate -> build/plugin.js
 npx webim-plugin push    # upload to the tenant in webim-plugin.json
 npx webim-plugin dev     # watch + rebuild + push
 \`\`\`
@@ -172,7 +172,7 @@ const TEMPLATE_GUIDE = (id, name, entry) => `# Web-IM plugin rules — ${name}
 
 Directives for AI assistants (and humans) working on the Web-IM builder
 plugin in this project. Follow every MUST. The plugin entry is \`${entry}\`;
-\`npx webim-plugin build\` bundles it to \`dist/plugin.js\` and validates it.
+\`npx webim-plugin build\` bundles it to \`build/plugin.js\` and validates it.
 
 ## The contract
 
@@ -261,7 +261,7 @@ must have a default in \`props\`.
 ## Ship
 
 \`\`\`bash
-npx webim-plugin build   # bundle + validate -> dist/plugin.js
+npx webim-plugin build   # bundle + validate -> build/plugin.js
 npx webim-plugin push    # upload to the tenant in webim-plugin.json
 npx webim-plugin dev     # watch + rebuild + push
 \`\`\`
@@ -448,7 +448,7 @@ async function wrap(dirArg) {
 
   await mkdir(path.dirname(entryFile), { recursive: true });
   await writeFile(path.join(dir, CONFIG_FILE), `${JSON.stringify(
-    { entry, out: 'dist/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
+    { entry, out: 'build/plugin.js', api: 'https://webim.app/api', tenant: 'root' },
     null,
     2
   )}\n`);
@@ -490,7 +490,7 @@ async function loadConfig() {
 
   return {
     entry: config.entry ?? 'src/index.js',
-    out: config.out ?? 'dist/plugin.js',
+    out: config.out ?? 'build/plugin.js',
     api: config.api ?? 'https://webim.app/api',
     tenant: config.tenant ?? ''
   };

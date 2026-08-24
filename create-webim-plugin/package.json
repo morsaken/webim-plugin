@@ -30,6 +30,6 @@
     "scaffold"
   ],
   "dependencies": {
-    "webim-plugin": "^1.1.1"
+    "webim-plugin": "^1.2.0"
   }
 }

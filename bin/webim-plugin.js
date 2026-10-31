@@ -5,6 +5,7 @@
 //   webim-plugin init [dir]     scaffold a plugin project
 //   webim-plugin build          bundle src/ into build/plugin.js and validate it
 //   webim-plugin push           build + upload to the tenant's builder_plugins
+//                               ("platform": true → root's platform library)
 //   webim-plugin dev            watch src/, rebuild and push on every change
 //
 // The build target is the SINGLE-MODULE STANDARD the dashboard's plugin
@@ -38,6 +39,10 @@ Commands:
 Config (webim-plugin.json):
   { "entry": "src/index.js", "out": "build/plugin.js",
     "api": "https://webim.app/api", "tenant": "root" }
+  "platform": true pushes into the PLATFORM library instead (a token of
+  root's master — full access, or limited to "Plugin library"): one copy that the workspaces root picks in Settings → Plugins → All
+  workspaces all run. A plugin's first push there is offered to nobody yet;
+  later pushes keep the workspaces it was given.
 
 Auth (push/dev): WEBIM_TOKEN, or WEBIM_EMAIL + WEBIM_PASSWORD.`;
 
@@ -492,7 +497,9 @@ async function loadConfig() {
     entry: config.entry ?? 'src/index.js',
     out: config.out ?? 'build/plugin.js',
     api: config.api ?? 'https://webim.app/api',
-    tenant: config.tenant ?? ''
+    tenant: config.tenant ?? '',
+    // push into root's platform library instead of the token's workspace
+    platform: config.platform === true
   };
 }
 
@@ -592,7 +599,13 @@ function validatePlugin(plugin) {
       settings: Array.isArray(block.settings)
         ? block.settings.filter((field) => field && typeof field.name === 'string')
         : []
-    }))
+    })),
+    // Page-triggerable actions (dashboard Inspector → Plugin action)
+    actions: Array.isArray(plugin.actions)
+      ? plugin.actions
+        .filter((action) => action && typeof action.id === 'string' && /^[a-z0-9-]+$/.test(action.id) && typeof action.label === 'string')
+        .map((action) => ({ id: action.id, label: action.label }))
+      : []
   };
 }
 
@@ -678,6 +691,14 @@ async function push() {
     );
   }
 
+  if (config.platform) {
+    // Only root's master writes the library — and only the master reads all of it, so
+    // anyone else would write back a partial map and drop the other plugins.
+    if (me?.master !== true) throw new Error('"platform": true needs a token of the root workspace\'s master account');
+
+    return pushToLibrary(config, token, manifest, code);
+  }
+
   // Merge over the tenant's existing catalog — pushing one plugin must not
   // wipe the others.
   const rows = await api(config, '/settings/tenant', { token });
@@ -686,13 +707,50 @@ async function push() {
 
   plugins[manifest.id] = { code, manifest };
 
-  await api(config, '/settings/builder_plugins', {
+  const saved = await api(config, '/settings/builder_plugins', {
+    method: 'PUT',
+    token,
+    body: { value: { plugins }, is_public: true }
+  });
+  // The server tags a workspace's plugin ids with its slug (weather → weather--acme)
+  // so they can never clash with the platform's; say which id pages will use.
+  const stored = Object.entries(saved?.value?.plugins ?? {})
+    .find(([key, entry]) => (key === manifest.id) || (entry?.manifest?.origin_id === manifest.id))?.[0] ?? manifest.id;
+
+  console.log(`Pushed ${stored} v${manifest.version} to tenant "${actualTenant ?? config.tenant}" (${config.api})`);
+}
+
+/**
+ * The platform library (global `builder_plugins`): one copy, offered to the
+ * workspaces in its entry's scope — `is_global` or `tenant_ids`, set by root
+ * in the dashboard and kept here on every push. A new entry is offered to
+ * nobody, so a pushed plugin never reaches a customer by accident.
+ */
+async function pushToLibrary(config, token, manifest, code) {
+  const rows = await api(config, '/settings/global', { token });
+  const current = Array.isArray(rows) ? rows.find((row) => row?.key === 'builder_plugins')?.value : null;
+  const plugins = current && typeof current.plugins === 'object' ? { ...current.plugins } : {};
+  const before = plugins[manifest.id];
+  const scope = before
+    ? { ...('is_global' in before ? { is_global: before.is_global } : {}), ...('tenant_ids' in before ? { tenant_ids: before.tenant_ids } : {}) }
+    : { is_global: false, tenant_ids: [] };
+
+  plugins[manifest.id] = { code, manifest, ...scope };
+
+  await api(config, '/settings/global/builder_plugins', {
     method: 'PUT',
     token,
     body: { value: { plugins }, is_public: true }
   });
 
-  console.log(`Pushed ${manifest.id} v${manifest.version} to tenant "${actualTenant ?? config.tenant}" (${config.api})`);
+  const ids = Array.isArray(scope.tenant_ids) ? scope.tenant_ids : [];
+  const offered = scope.is_global !== false
+    ? 'every workspace'
+    : ids.length
+      ? `${ids.length} workspace${ids.length === 1 ? '' : 's'}`
+      : 'no workspace yet — pick them in Settings → Plugins → All workspaces';
+
+  console.log(`Pushed ${manifest.id} v${manifest.version} to the platform library (${config.api}) — offered to ${offered}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -73,6 +73,15 @@ needed).
 }
 ```
 
+Optional: `"platform": true` pushes into the PLATFORM library instead of a
+workspace — one copy that every workspace root offers it to runs. Only the
+root workspace's master account may do it (the CLI refuses any other token).
+A plugin's first push there is offered to no workspace until root picks them
+in Settings → Plugins → All workspaces; later pushes keep that choice.
+
+The dashboard's Settings → Plugins → **How to push** shows this file already
+filled in with that site's API address and your workspace.
+
 ## Auth for push/dev
 
 Environment variables, never stored in the project:
@@ -99,16 +108,33 @@ export default {
     mount(el, props, ctx) {},  // ctx = { tenant, apiUrl, locale, settings }
     update(el, props, ctx) {}, // optional — omitted = unmount + mount
     unmount(el) {}             // optional
-  }]
+  }],
+  actions: [{ id: 'refresh', label: 'Refresh' }]  // optional, see below
 };
 ```
+
+`actions` (optional) are things a page element can trigger: the builder's
+Inspector → Plugin action lists them, and the element gets
+`data-wim-action="<plugin id>:<action id>"`. Your code registers what each
+action does.
 
 Source can span as many files as you like — `build` flattens them. Keep DOM
 work inside `mount`/`update`: the built module is imported in Node during
 validation, so module-level `document` access fails the build (on purpose).
 
 Pushing merges by plugin id over the tenant's existing catalog — one plugin
-per project, other installed plugins untouched.
+per project, other installed plugins untouched. Push again to update: the same
+id updates the same plugin.
+
+Outside the root workspace, the server stores a NEW plugin under its id plus
+the workspace's address (`weather` → `weather--acme`), so a workspace's plugin
+can never replace one of Web-IM's own with the same name. Keep `weather` in
+your code — later pushes find the stored copy by it — and `push` prints the id
+pages will use. Plugin actions keep your own id (`weather:refresh`).
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 

@@ -1,12 +1,12 @@
 {
   "name": "webim-plugin",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "CLI for Web-IM builder plugins — scaffold, bundle TS/JSX into the single-module standard, validate, and push to a tenant",
   "license": "MIT",
   "author": "Orhan POLAT",
   "type": "module",
   "bin": {
-    "webim-plugin": "./bin/webim-plugin.js"
+    "webim-plugin": "bin/webim-plugin.js"
   },
   "files": [
     "bin"

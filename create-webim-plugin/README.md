@@ -8,7 +8,9 @@ npm create webim-plugin my-widget
 
 is exactly `webim-plugin init my-widget` — it scaffolds a Web-IM builder
 plugin project (`webim-plugin.json`, `src/`, README). Everything else
-(`build`, `push`, `dev`) lives in the `webim-plugin` CLI; see its README.
+(`build`, `push`, `dev`) lives in the `webim-plugin` CLI (1.3 or newer); see
+its README and
+[CHANGELOG](https://github.com/morsaken/webim-plugin/blob/master/CHANGELOG.md).
 
 > **Note:** on npm ≥ 11.17, installing the scaffolded project's dependencies
 > may print an `allow-scripts` warning about esbuild's postinstall script.

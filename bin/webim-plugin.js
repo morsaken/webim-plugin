@@ -727,6 +727,28 @@ async function push() {
  * nobody, so a pushed plugin never reaches a customer by accident.
  */
 async function pushToLibrary(config, token, manifest, code) {
+  // One plugin per request: the API merges it into the library and keeps its
+  // workspace scope, so the push stays small however big the library grows.
+  try {
+    const saved = await api(config, `/settings/global/builder_plugins/plugins/${encodeURIComponent(manifest.id)}`, {
+      method: 'PUT',
+      token,
+      body: { code, manifest }
+    });
+    const ids = Array.isArray(saved?.tenant_ids) ? saved.tenant_ids : [];
+    const offered = saved?.is_global !== false
+      ? 'every workspace'
+      : ids.length
+        ? `${ids.length} workspace${ids.length === 1 ? '' : 's'}`
+        : 'no workspace yet — pick them in Settings → Plugins → All workspaces';
+
+    console.log(`Pushed ${manifest.id} v${manifest.version} to the platform library (${config.api}) — offered to ${offered}`);
+    return;
+  } catch (err) {
+    // an API from before the one-plugin route: send the whole library as before
+    if (!/ (404|NOT_FOUND)\b/.test(String(err?.message ?? ''))) throw err;
+  }
+
   const rows = await api(config, '/settings/global', { token });
   const current = Array.isArray(rows) ? rows.find((row) => row?.key === 'builder_plugins')?.value : null;
   const plugins = current && typeof current.plugins === 'object' ? { ...current.plugins } : {};

@@ -2,6 +2,21 @@
 
 `webim-plugin` and `create-webim-plugin` are released together.
 
+## 1.4.0 — 2026-11-05
+
+### webim-plugin
+
+- A platform push (`"platform": true`) uploads only its own plugin
+  (`PUT /settings/global/builder_plugins/plugins/:id`); the API merges it into
+  the library and keeps the workspaces it is offered to. The old way re-sent
+  every plugin's code and stopped at the API's body limit (413) once the
+  library passed 8 MB. Against an API without the new route it falls back to
+  the full write.
+
+### create-webim-plugin
+
+- Released with webim-plugin 1.4.0; no changes.
+
 ## 1.3.0 — 2026-11-01
 
 ### webim-plugin

@@ -598,7 +598,9 @@ function validatePlugin(plugin) {
       props: block.props && typeof block.props === 'object' ? block.props : {},
       settings: Array.isArray(block.settings)
         ? block.settings.filter((field) => field && typeof field.name === 'string')
-        : []
+        : [],
+      // the placeholder the site draws while the block's code loads (view.jsx BlockSkeleton)
+      ...(['page', 'banner', 'box', 'none'].includes(block.skeleton) ? { skeleton: block.skeleton } : {})
     })),
     // Page-triggerable actions (dashboard Inspector → Plugin action)
     actions: Array.isArray(plugin.actions)
